@@ -1,10 +1,10 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
 import { TagForm } from '../components/TagForm';
 import { TagBadge } from '../components/TagBadge';
 import { EmptyState } from '../components/EmptyState';
-import { useTags, useCreateTag, useUpdateTag, useDeleteTag } from '../hooks/useTags';
+import { useTags, useCreateTag, useUpdateTag, useDeleteTag, useReorderTags } from '../hooks/useTags';
 import { useToast } from '../hooks/useToast';
 import type { Tag, CreateTagRequest, UpdateTagRequest } from '../types/tag';
 
@@ -12,15 +12,30 @@ interface TagManagerProps {
   onClose?: () => void;
 }
 
+function reorderList<T>(items: T[], fromIndex: number, toIndex: number): T[] {
+  if (fromIndex === toIndex) return [...items];
+  const next = [...items];
+  const [removed] = next.splice(fromIndex, 1);
+  next.splice(toIndex, 0, removed);
+  return next;
+}
+
 export function TagManager({ onClose }: TagManagerProps) {
   const [formOpen, setFormOpen] = useState(false);
   const [editingTag, setEditingTag] = useState<Tag | undefined>();
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
 
   const { data: tags = [], isLoading, error } = useTags();
   const createTag = useCreateTag();
   const updateTag = useUpdateTag();
   const deleteTag = useDeleteTag();
+  const reorderTags = useReorderTags();
   const { showToast, ToastContainer } = useToast();
+
+  const sortedTags = useMemo(
+    () => [...tags].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0) || a.id - b.id),
+    [tags]
+  );
 
   const handleCreate = () => {
     setEditingTag(undefined);
@@ -47,6 +62,31 @@ export function TagManager({ onClose }: TagManagerProps) {
       showToast(error instanceof Error ? error.message : '操作失败', 'error');
     }
   };
+
+  const handleDragStart = (index: number) => (e: React.DragEvent) => {
+    setDragIndex(index);
+    e.dataTransfer.setData('text/plain', String(index));
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDrop = (targetIndex: number) => (e: React.DragEvent) => {
+    e.preventDefault();
+    const raw = e.dataTransfer.getData('text/plain');
+    const from = dragIndex ?? (raw ? parseInt(raw, 10) : NaN);
+    setDragIndex(null);
+    if (Number.isNaN(from) || from === targetIndex || reorderTags.isPending) return;
+    const next = reorderList(sortedTags, from, targetIndex);
+    reorderTags.mutate(next.map((t) => t.id), {
+      onError: (err) => showToast(err instanceof Error ? err.message : '排序失败', 'error'),
+    });
+  };
+
+  const handleDragEnd = () => setDragIndex(null);
 
   const handleDelete = async (id: number) => {
     if (!confirm('确定要删除这个标签吗？删除后，所有关联的 Ticket 将不再显示此标签。')) {
@@ -105,32 +145,61 @@ export function TagManager({ onClose }: TagManagerProps) {
         )}
 
         {!isLoading && !error && tags.length > 0 && (
-          <div className="grid gap-3 sm:grid-cols-2">
-            {tags.map((tag) => (
-              <Card
-                key={tag.id}
-                className="group transition-[transform,box-shadow] duration-md hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-md-lift"
-              >
-                <CardContent className="px-4 py-3">
-                  <div className="flex items-center justify-between gap-2">
-                    <TagBadge tag={tag} />
-                    <div className="flex gap-1 opacity-100 transition-opacity duration-md sm:opacity-0 sm:group-hover:opacity-100">
-                      <Button variant="ghost" size="sm" onClick={() => handleEdit(tag)} className="normal-case">
-                        编辑
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDelete(tag.id)}
-                        className="normal-case text-md-slate hover:text-red-700"
-                      >
-                        删除
-                      </Button>
+          <div>
+            <p className="mb-3 text-xs font-medium text-md-slate">
+              拖动左侧手柄调整顺序；顺序会同步到侧栏与表单的标签列表。
+            </p>
+            <div className="flex flex-col gap-3">
+              {sortedTags.map((tag, index) => (
+                <Card
+                  key={tag.id}
+                  onDragOver={handleDragOver}
+                  onDrop={handleDrop(index)}
+                  className={`group transition-[transform,box-shadow,opacity] duration-md hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-md-lift ${
+                    dragIndex === index ? 'opacity-60' : ''
+                  }`}
+                >
+                  <CardContent className="px-4 py-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex min-w-0 flex-1 items-center gap-2">
+                        <span
+                          role="button"
+                          tabIndex={0}
+                          aria-label={`拖动排序：${tag.name}`}
+                          draggable
+                          onDragStart={handleDragStart(index)}
+                          onDragEnd={handleDragEnd}
+                          className="shrink-0 cursor-grab touch-none rounded-struct border-2 border-md-graphite bg-md-fog p-1.5 text-md-slate active:cursor-grabbing"
+                        >
+                          <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+                            <circle cx="9" cy="8" r="1.5" />
+                            <circle cx="15" cy="8" r="1.5" />
+                            <circle cx="9" cy="12" r="1.5" />
+                            <circle cx="15" cy="12" r="1.5" />
+                            <circle cx="9" cy="16" r="1.5" />
+                            <circle cx="15" cy="16" r="1.5" />
+                          </svg>
+                        </span>
+                        <TagBadge tag={tag} />
+                      </div>
+                      <div className="flex shrink-0 gap-1 opacity-100 transition-opacity duration-md sm:opacity-0 sm:group-hover:opacity-100">
+                        <Button variant="ghost" size="sm" onClick={() => handleEdit(tag)} className="normal-case">
+                          编辑
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDelete(tag.id)}
+                          className="normal-case text-md-slate hover:text-red-700"
+                        >
+                          删除
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
           </div>
         )}
       </div>

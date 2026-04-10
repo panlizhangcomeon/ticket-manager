@@ -2,9 +2,21 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.crud import tag as tag_crud
-from app.schemas.tag import TagCreate, TagUpdate, TagResponse, TagListResponse
+from app.schemas.tag import TagCreate, TagUpdate, TagResponse, TagListResponse, TagReorderRequest
 
 router = APIRouter()
+
+
+@router.put("/reorder", response_model=TagListResponse)
+def reorder_tags(body: TagReorderRequest, db: Session = Depends(get_db)):
+    result = tag_crud.reorder_tags(db, body.tag_ids)
+    if result is None:
+        raise HTTPException(
+            status_code=400,
+            detail="tag_ids 必须包含当前全部标签且各出现一次",
+        )
+    return TagListResponse(tags=[TagResponse.model_validate(t) for t in result])
+
 
 @router.get("/", response_model=TagListResponse)
 def get_tags(

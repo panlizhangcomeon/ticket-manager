@@ -94,6 +94,10 @@ export function TicketList({ globalSearch = '' }: TicketListProps) {
     }
 
     result.sort((a, b) => {
+      // 未完成始终排在已完成之前（待完成/已完成视图内状态一致，不影响顺序）
+      if (a.is_completed !== b.is_completed) {
+        return a.is_completed ? 1 : -1;
+      }
       switch (sortBy) {
         case 'created_desc':
           return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();

@@ -25,4 +25,9 @@ export const tagService = {
   async deleteTag(id: number): Promise<void> {
     await apiClient.delete(`/api/v1/tags/${id}`);
   },
+
+  async reorderTags(tagIds: number[]): Promise<Tag[]> {
+    const response = await apiClient.put<TagListResponse>('/api/v1/tags/reorder', { tag_ids: tagIds });
+    return response.data.tags;
+  },
 };

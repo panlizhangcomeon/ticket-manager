@@ -10,8 +10,9 @@ class Tag(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(50), nullable=False, index=True)
     color = Column(String(7), default='#3B82F6', nullable=True)
+    sort_order = Column(Integer, nullable=False, default=0, server_default="0", index=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
-    
+
     # 关联关系
     tickets = relationship("Ticket", secondary=ticket_tags, back_populates="tags")

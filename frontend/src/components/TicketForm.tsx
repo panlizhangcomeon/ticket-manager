@@ -1,11 +1,21 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { MarkdownContent } from './MarkdownContent';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Textarea } from './ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from './ui/dialog';
+import {
+  wrapSelection,
+  insertSnippet,
+  prefixCurrentLine,
+  insertLinePrefix,
+  insertRaw,
+} from '../lib/markdownInsert';
 import type { Ticket, CreateTicketRequest, UpdateTicketRequest } from '../types/ticket';
 import type { Tag } from '../types/tag';
+
+const MD_TOOLBAR_BTN =
+  'rounded-struct border-2 border-md-graphite bg-md-cloud px-2 py-1.5 text-xs font-semibold text-md-ink transition-[transform,background-color] duration-md hover:bg-md-soft-blue focus-visible:outline-none focus-visible:border-md-sky-strong active:translate-x-px active:translate-y-px';
 
 interface TicketFormProps {
   ticket?: Ticket;
@@ -22,6 +32,47 @@ export function TicketForm({ ticket, tags, defaultSelectedTagIds, onSubmit, onCa
   const [description, setDescription] = useState('');
   const [selectedTagIds, setSelectedTagIds] = useState<number[]>([]);
   const [showPreview, setShowPreview] = useState(false);
+  const descRef = useRef<HTMLTextAreaElement>(null);
+
+  const applyInsert = useCallback(
+    (compute: (value: string, start: number, end: number) => ReturnType<typeof wrapSelection>) => {
+      const el = descRef.current;
+      if (!el) return;
+      const start = el.selectionStart;
+      const end = el.selectionEnd;
+      const { value, selStart, selEnd } = compute(description, start, end);
+      setDescription(value);
+      requestAnimationFrame(() => {
+        el.focus();
+        el.setSelectionRange(selStart, selEnd);
+      });
+    },
+    [description]
+  );
+
+  const mdBold = () => applyInsert((v, s, e) => wrapSelection(v, s, e, '**', '**'));
+  const mdItalic = () => applyInsert((v, s, e) => wrapSelection(v, s, e, '*', '*'));
+  const mdStrike = () => applyInsert((v, s, e) => wrapSelection(v, s, e, '~~', '~~'));
+  const mdCode = () => applyInsert((v, s, e) => wrapSelection(v, s, e, '`', '`'));
+  const mdHeading = () => applyInsert((v, s) => prefixCurrentLine(v, s, '## '));
+  const mdBullet = () => applyInsert((v, s, e) => insertLinePrefix(v, s, e, '- '));
+  const mdOrdered = () => applyInsert((v, s, e) => insertLinePrefix(v, s, e, '1. '));
+  const mdQuote = () => applyInsert((v, s, e) => insertLinePrefix(v, s, e, '> '));
+  const mdTask = () => applyInsert((v, s, e) => insertLinePrefix(v, s, e, '- [ ] '));
+  const mdLink = () => applyInsert((v, s, e) => insertSnippet(v, s, e, '[链接文字](https://)', 1, 5));
+  const mdCodeBlock = () =>
+    applyInsert((v, s, e) => {
+      const selected = v.slice(s, e);
+      if (selected) {
+        const snippet = `\n\`\`\`\n${selected}\n\`\`\`\n`;
+        return insertSnippet(v, s, e, snippet, snippet.length, snippet.length);
+      }
+      return insertSnippet(v, s, e, '\n```\n\n```\n', 5, 5);
+    });
+  const mdTable = () =>
+    applyInsert((v, s, e) => insertSnippet(v, s, e, '| 列1 | 列2 |\n| --- | --- |\n|  |  |\n', 2, 4));
+  const mdNewline = () => applyInsert((v, s, e) => insertRaw(v, s, e, '\n'));
+  const mdHorizontalRule = () => applyInsert((v, s, e) => insertLinePrefix(v, s, e, '---\n'));
 
   useEffect(() => {
     if (ticket) {
@@ -92,8 +143,58 @@ export function TicketForm({ ticket, tags, defaultSelectedTagIds, onSubmit, onCa
                   {showPreview ? '编辑' : '预览'}
                 </button>
               </div>
+              {!showPreview && (
+                <div
+                  className="mb-2 flex flex-wrap gap-1.5 rounded-struct border-2 border-md-graphite bg-md-fog px-2 py-2"
+                  role="toolbar"
+                  aria-label="Markdown 插入"
+                >
+                  <button type="button" className={MD_TOOLBAR_BTN} onClick={mdBold}>
+                    粗体
+                  </button>
+                  <button type="button" className={MD_TOOLBAR_BTN} onClick={mdItalic}>
+                    斜体
+                  </button>
+                  <button type="button" className={MD_TOOLBAR_BTN} onClick={mdStrike}>
+                    删除线
+                  </button>
+                  <button type="button" className={MD_TOOLBAR_BTN} onClick={mdCode}>
+                    行内代码
+                  </button>
+                  <button type="button" className={MD_TOOLBAR_BTN} onClick={mdCodeBlock}>
+                    代码块
+                  </button>
+                  <button type="button" className={MD_TOOLBAR_BTN} onClick={mdHeading}>
+                    标题
+                  </button>
+                  <button type="button" className={MD_TOOLBAR_BTN} onClick={mdBullet}>
+                    无序列表
+                  </button>
+                  <button type="button" className={MD_TOOLBAR_BTN} onClick={mdOrdered}>
+                    有序列表
+                  </button>
+                  <button type="button" className={MD_TOOLBAR_BTN} onClick={mdQuote}>
+                    引用
+                  </button>
+                  <button type="button" className={MD_TOOLBAR_BTN} onClick={mdTask}>
+                    任务
+                  </button>
+                  <button type="button" className={MD_TOOLBAR_BTN} onClick={mdLink}>
+                    链接
+                  </button>
+                  <button type="button" className={MD_TOOLBAR_BTN} onClick={mdTable}>
+                    表格
+                  </button>
+                  <button type="button" className={MD_TOOLBAR_BTN} onClick={mdNewline}>
+                    换行
+                  </button>
+                  <button type="button" className={MD_TOOLBAR_BTN} onClick={mdHorizontalRule}>
+                    分隔线
+                  </button>
+                </div>
+              )}
               {showPreview ? (
-                <div className="min-h-[160px] rounded-struct border-2 border-md-graphite bg-md-fog p-4">
+                <div className="min-h-[280px] rounded-struct border-2 border-md-graphite bg-md-fog p-4">
                   {description ? (
                     <div className="prose-md-ticket prose-sm max-w-none text-[15px]">
                       <MarkdownContent>{description}</MarkdownContent>
@@ -104,12 +205,13 @@ export function TicketForm({ ticket, tags, defaultSelectedTagIds, onSubmit, onCa
                 </div>
               ) : (
                 <Textarea
+                  ref={descRef}
                   id="ticket-desc"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  placeholder="支持 Markdown：**粗体**、列表、标题…"
-                  rows={6}
-                  className="resize-none font-mono text-sm"
+                  placeholder="在此编写描述；可用上方工具栏插入常用 Markdown 格式。"
+                  rows={14}
+                  className="min-h-[280px] resize-none font-mono text-sm"
                 />
               )}
               <p className="mt-1.5 text-xs font-medium text-md-slate">支持 Markdown 语法</p>

@@ -5,11 +5,13 @@ from sqlalchemy.exc import SQLAlchemyError
 from app.database import engine, Base
 from app.api.v1 import tickets, tags
 from app.utils.errors import validation_exception_handler, sqlalchemy_exception_handler
+from app.db_migrate import ensure_tags_sort_order
 # 导入模型以确保表被创建
 from app.models import Ticket, Tag
 
 # 创建数据库表（开发环境）
 Base.metadata.create_all(bind=engine)
+ensure_tags_sort_order(engine)
 
 app = FastAPI(
     title="Ticket Management System API",

@@ -40,3 +40,13 @@ export function useDeleteTag() {
     },
   });
 }
+
+export function useReorderTags() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (tagIds: number[]) => tagService.reorderTags(tagIds),
+    onSuccess: (nextTags) => {
+      queryClient.setQueryData(['tags'], nextTags);
+    },
+  });
+}

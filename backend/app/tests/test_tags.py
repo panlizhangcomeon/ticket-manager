@@ -148,3 +148,20 @@ class TestTagCRUD:
         """测试删除不存在的标签（应返回404）"""
         response = client.delete("/api/v1/tags/99999")
         assert response.status_code == status.HTTP_404_NOT_FOUND
+
+    def test_reorder_tags(self, client, db):
+        """测试拖动排序：须包含全部标签 id 各一次"""
+        r1 = client.post("/api/v1/tags", json={"name": "A", "color": "#111111"})
+        r2 = client.post("/api/v1/tags", json={"name": "B", "color": "#222222"})
+        id_a = r1.json()["id"]
+        id_b = r2.json()["id"]
+
+        response = client.put("/api/v1/tags/reorder", json={"tag_ids": [id_b, id_a]})
+        assert response.status_code == status.HTTP_200_OK
+        tags = response.json()["tags"]
+        assert [t["id"] for t in tags] == [id_b, id_a]
+        assert tags[0]["sort_order"] == 0
+        assert tags[1]["sort_order"] == 1
+
+        bad = client.put("/api/v1/tags/reorder", json={"tag_ids": [id_a]})
+        assert bad.status_code == status.HTTP_400_BAD_REQUEST
