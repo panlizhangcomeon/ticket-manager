@@ -123,7 +123,7 @@ pytest app/tests/ --cov=app --cov-report=term-missing
 - 初始化前端项目
 - 数据库初始化
 
-### 阶段 2：后端开发（待完成）
+### 阶段 2：后端开发 ✅
 
 - 数据库模型实现
 - Pydantic 模式实现
@@ -131,7 +131,7 @@ pytest app/tests/ --cov=app --cov-report=term-missing
 - API 路由实现
 - 错误处理和工具函数
 
-### 阶段 3：前端开发（待完成）
+### 阶段 3：前端开发 ✅
 
 - 类型定义和 API 服务
 - React Query Hooks
@@ -162,11 +162,6 @@ DATABASE_NAME=ticket_db
 ```env
 VITE_API_BASE_URL=http://localhost:8001
 ```
-
-## 参考文档
-
-- [需求文档](./docs/0001-spec.md)
-- [实现计划](./docs/0001-plan.md)
 
 ## 许可证
 
