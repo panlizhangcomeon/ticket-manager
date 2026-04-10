@@ -50,3 +50,8 @@ logs/
 # Project
 .claude/
 docs/
+
+# 本地一键启停
+.ticket-manager-dev.pids
+backend-dev.log
+frontend-dev.log
