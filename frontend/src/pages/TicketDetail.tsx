@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import ReactMarkdown from 'react-markdown';
+import { MarkdownContent } from '../components/MarkdownContent';
 import { useTicket, useToggleComplete } from '../hooks/useTickets';
 import { useTags } from '../hooks/useTags';
 import { useToast } from '../hooks/useToast';
@@ -115,7 +115,7 @@ export function TicketDetail() {
           <h2 className="mb-4 text-eyebrow font-bold uppercase tracking-wider text-md-slate">描述</h2>
           <div className="prose-md-ticket max-w-none text-[15px] leading-relaxed">
             {ticket.description ? (
-              <ReactMarkdown>{ticket.description}</ReactMarkdown>
+              <MarkdownContent>{ticket.description}</MarkdownContent>
             ) : (
               <p className="text-md-slate italic">暂无描述</p>
             )}

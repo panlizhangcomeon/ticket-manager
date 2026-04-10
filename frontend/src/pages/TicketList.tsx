@@ -31,6 +31,7 @@ export function TicketList({ globalSearch = '' }: TicketListProps) {
   const [formOpen, setFormOpen] = useState(false);
   const [editingTicket, setEditingTicket] = useState<Ticket | undefined>();
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [batchMode, setBatchMode] = useState(false);
 
   useEffect(() => {
     const st = location.state as { openCreateTicket?: boolean } | null;
@@ -71,6 +72,11 @@ export function TicketList({ globalSearch = '' }: TicketListProps) {
       tagCounts,
     };
   }, [allTickets]);
+
+  const defaultSelectedTagIdsForCreate = useMemo(
+    () => (selectedTagId !== null ? [selectedTagId] : []),
+    [selectedTagId]
+  );
 
   const filteredTickets = useMemo(() => {
     let result = [...allTickets];
@@ -177,7 +183,13 @@ export function TicketList({ globalSearch = '' }: TicketListProps) {
     }
   };
 
+  const exitBatchMode = () => {
+    setBatchMode(false);
+    setSelectedIds(new Set());
+  };
+
   const handleBatchComplete = async () => {
+    if (selectedIds.size === 0) return;
     try {
       for (const id of selectedIds) {
         await toggleComplete.mutateAsync({ id, is_completed: true });
@@ -190,6 +202,7 @@ export function TicketList({ globalSearch = '' }: TicketListProps) {
   };
 
   const handleBatchDelete = async () => {
+    if (selectedIds.size === 0) return;
     if (!confirm(`确定要删除选中的 ${selectedIds.size} 个 Ticket 吗？`)) {
       return;
     }
@@ -258,34 +271,43 @@ export function TicketList({ globalSearch = '' }: TicketListProps) {
               <option value="title_desc">标题 Z-A</option>
             </select>
 
-            <Button type="button" onClick={handleCreate}>
+            {!batchMode ? (
+              <Button type="button" variant="secondary" onClick={() => setBatchMode(true)}>
+                批量操作
+              </Button>
+            ) : null}
+            <Button type="button" onClick={handleCreate} disabled={batchMode}>
               + 新建 Ticket
             </Button>
           </div>
         </div>
 
-        {selectedIds.size > 0 && (
+        {batchMode && (
           <div
             className="mb-4 flex flex-wrap items-center gap-3 rounded-struct border-2 border-md-graphite bg-md-sunbeam px-4 py-3"
-            role="status"
-            aria-live="polite"
+            role="region"
+            aria-label="批量操作"
           >
-            <span className="text-sm font-semibold text-md-ink">
-              已选择 {selectedIds.size} 项
+            <span className="text-sm font-semibold text-md-ink">批量操作中</span>
+            <span className="text-sm text-md-ink" aria-live="polite">
+              已选 {selectedIds.size} 项 · 点击卡片或左侧方框多选
             </span>
             <button
               type="button"
               onClick={handleSelectAll}
               className="text-sm font-semibold text-md-ink underline decoration-2 underline-offset-2 hover:text-md-graphite"
             >
-              {selectedIds.size === filteredTickets.length ? '取消全选' : '全选当前列表'}
+              {filteredTickets.length > 0 && selectedIds.size === filteredTickets.length ? '取消全选' : '全选当前列表'}
             </button>
             <div className="flex-1" />
-            <Button type="button" size="sm" onClick={handleBatchComplete}>
+            <Button type="button" size="sm" onClick={handleBatchComplete} disabled={selectedIds.size === 0}>
               批量完成
             </Button>
-            <Button type="button" variant="destructive" size="sm" onClick={handleBatchDelete}>
+            <Button type="button" variant="destructive" size="sm" onClick={handleBatchDelete} disabled={selectedIds.size === 0}>
               批量删除
+            </Button>
+            <Button type="button" variant="secondary" size="sm" onClick={exitBatchMode}>
+              完成
             </Button>
           </div>
         )}
@@ -308,6 +330,7 @@ export function TicketList({ globalSearch = '' }: TicketListProps) {
               <TicketCard
                 key={ticket.id}
                 ticket={ticket}
+                batchMode={batchMode}
                 selected={selectedIds.has(ticket.id)}
                 onSelect={handleSelect}
                 onToggleComplete={handleToggleComplete}
@@ -321,6 +344,7 @@ export function TicketList({ globalSearch = '' }: TicketListProps) {
         <TicketForm
           ticket={editingTicket}
           tags={tags}
+          defaultSelectedTagIds={defaultSelectedTagIdsForCreate}
           onSubmit={handleSubmit}
           onCancel={() => {
             setFormOpen(false);

@@ -64,10 +64,130 @@
   @apply text-md-ink;
 }
 
+.prose-md-ticket > * + * {
+  margin-top: 0.75rem;
+}
+
+.prose-md-ticket > *:first-child {
+  margin-top: 0;
+}
+
+.prose-md-ticket h1 {
+  @apply border-b-2 border-md-graphite pb-2 text-xl font-bold uppercase tracking-wide text-md-ink;
+}
+
+.prose-md-ticket h2 {
+  @apply mt-6 border-b border-md-grid-line pb-1 text-lg font-bold uppercase tracking-wide text-md-ink first:mt-0;
+}
+
+.prose-md-ticket h3 {
+  @apply mt-4 text-base font-bold uppercase tracking-wide text-md-ink first:mt-0;
+}
+
+.prose-md-ticket h4,
+.prose-md-ticket h5,
+.prose-md-ticket h6 {
+  @apply mt-3 text-[15px] font-bold text-md-ink first:mt-0;
+}
+
+.prose-md-ticket p {
+  @apply text-[15px] leading-relaxed;
+}
+
+.prose-md-ticket strong {
+  @apply font-bold text-md-graphite;
+}
+
+.prose-md-ticket em {
+  @apply italic text-md-ink;
+}
+
+.prose-md-ticket del {
+  @apply text-md-slate line-through;
+}
+
 .prose-md-ticket a {
-  @apply text-md-sky-strong underline decoration-2 underline-offset-2;
+  @apply text-md-sky-strong underline decoration-2 underline-offset-2 break-words hover:text-md-ink;
+}
+
+.prose-md-ticket ul {
+  @apply list-disc pl-6 text-[15px] leading-relaxed;
+}
+
+.prose-md-ticket ol {
+  @apply list-decimal pl-6 text-[15px] leading-relaxed;
+}
+
+.prose-md-ticket li {
+  @apply my-1;
+}
+
+.prose-md-ticket li > ul,
+.prose-md-ticket li > ol {
+  @apply my-1;
+}
+
+.prose-md-ticket ul.contains-task-list,
+.prose-md-ticket ol.contains-task-list {
+  @apply list-none pl-0;
+}
+
+.prose-md-ticket ul:has(> li > input[type='checkbox']),
+.prose-md-ticket ol:has(> li > input[type='checkbox']) {
+  @apply list-none pl-0;
+}
+
+.prose-md-ticket li.task-list-item {
+  @apply flex items-start gap-2;
+  list-style: none;
+}
+
+.prose-md-ticket li:has(> input[type='checkbox']) {
+  @apply flex items-start gap-2;
+  list-style: none;
+}
+
+.prose-md-ticket blockquote {
+  @apply border-l-4 border-md-graphite bg-md-fog py-2 pl-4 pr-3 text-md-slate italic;
+}
+
+.prose-md-ticket hr {
+  @apply my-6 border-0 border-t-2 border-md-grid-line;
 }
 
 .prose-md-ticket code {
-  @apply rounded-struct border-2 border-md-graphite bg-md-fog px-1 py-0.5 text-[13px] font-mono;
+  @apply rounded-struct border-2 border-md-graphite bg-md-fog px-1 py-0.5 text-[13px] font-mono text-md-ink;
+}
+
+.prose-md-ticket pre {
+  @apply overflow-x-auto rounded-struct border-2 border-md-graphite bg-md-graphite p-4;
+}
+
+.prose-md-ticket pre code {
+  @apply border-0 bg-transparent p-0 text-[13px] text-md-cloud;
+}
+
+.prose-md-ticket table {
+  @apply w-full border-collapse border-2 border-md-graphite text-left text-sm;
+}
+
+.prose-md-ticket thead {
+  @apply bg-md-soft-blue;
+}
+
+.prose-md-ticket th,
+.prose-md-ticket td {
+  @apply border-2 border-md-graphite px-3 py-2 align-top;
+}
+
+.prose-md-ticket th {
+  @apply font-bold uppercase tracking-wide text-md-ink;
+}
+
+.prose-md-ticket tbody tr:nth-child(even) {
+  background-color: var(--md-fog);
+}
+
+.prose-md-ticket img {
+  @apply max-h-[min(480px,70vh)] max-w-full rounded-struct border-2 border-md-graphite;
 }

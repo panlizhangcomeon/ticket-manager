@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import ReactMarkdown from 'react-markdown';
+import { MarkdownContent } from './MarkdownContent';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Textarea } from './ui/textarea';
@@ -10,12 +10,14 @@ import type { Tag } from '../types/tag';
 interface TicketFormProps {
   ticket?: Ticket;
   tags: Tag[];
+  /** 新建时默认勾选的标签（例如当前列表按某标签筛选时） */
+  defaultSelectedTagIds?: number[];
   onSubmit: (data: CreateTicketRequest | UpdateTicketRequest) => void;
   onCancel: () => void;
   open: boolean;
 }
 
-export function TicketForm({ ticket, tags, onSubmit, onCancel, open }: TicketFormProps) {
+export function TicketForm({ ticket, tags, defaultSelectedTagIds, onSubmit, onCancel, open }: TicketFormProps) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [selectedTagIds, setSelectedTagIds] = useState<number[]>([]);
@@ -29,10 +31,12 @@ export function TicketForm({ ticket, tags, onSubmit, onCancel, open }: TicketFor
     } else {
       setTitle('');
       setDescription('');
-      setSelectedTagIds([]);
+      const raw = defaultSelectedTagIds ?? [];
+      const valid = raw.filter((id) => tags.some((t) => t.id === id));
+      setSelectedTagIds(valid);
     }
     setShowPreview(false);
-  }, [ticket, open]);
+  }, [ticket, open, defaultSelectedTagIds, tags]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -92,7 +96,7 @@ export function TicketForm({ ticket, tags, onSubmit, onCancel, open }: TicketFor
                 <div className="min-h-[160px] rounded-struct border-2 border-md-graphite bg-md-fog p-4">
                   {description ? (
                     <div className="prose-md-ticket prose-sm max-w-none text-[15px]">
-                      <ReactMarkdown>{description}</ReactMarkdown>
+                      <MarkdownContent>{description}</MarkdownContent>
                     </div>
                   ) : (
                     <p className="text-sm italic text-md-slate">暂无内容</p>

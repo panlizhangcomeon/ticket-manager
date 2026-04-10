@@ -7,6 +7,8 @@ import type { Ticket } from '../types/ticket';
 
 interface TicketCardProps {
   ticket: Ticket;
+  /** 批量模式：仅显示多选框，卡片点击进入选择；非批量模式仅显示完成勾选 */
+  batchMode?: boolean;
   selected?: boolean;
   onSelect?: (id: number) => void;
   onToggleComplete: (id: number, is_completed: boolean) => void;
@@ -16,6 +18,7 @@ interface TicketCardProps {
 
 export const TicketCard = memo(function TicketCard({
   ticket,
+  batchMode = false,
   selected,
   onSelect,
   onToggleComplete,
@@ -35,6 +38,10 @@ export const TicketCard = memo(function TicketCard({
   };
 
   const handleClick = () => {
+    if (batchMode) {
+      onSelect?.(ticket.id);
+      return;
+    }
     navigate(`/ticket/${ticket.id}`);
   };
 
@@ -57,57 +64,63 @@ export const TicketCard = memo(function TicketCard({
           handleClick();
         }
       }}
-      role="link"
+      role={batchMode ? 'button' : 'link'}
+      aria-pressed={batchMode ? selected : undefined}
       tabIndex={0}
+      aria-label={batchMode ? `选择任务：${ticket.title}` : undefined}
       className={`group cursor-pointer transition-[transform,box-shadow,opacity] duration-md ease-in-out hover:-translate-x-[7px] hover:-translate-y-[7px] hover:shadow-md-lift focus-visible:outline-none focus-visible:ring-0 focus-visible:border-md-sky-strong ${
         ticket.is_completed ? 'opacity-70' : ''
       } ${selected ? 'border-md-sky-strong shadow-md-lift -translate-x-1 -translate-y-1' : ''}`}
     >
       <CardHeader className="px-4 pb-3 pt-4">
         <div className="flex items-start gap-3">
-          <div
-            role="checkbox"
-            aria-checked={selected}
-            tabIndex={0}
-            onClick={handleSelect}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                onSelect?.(ticket.id);
-              }
-            }}
-            className={`mt-0.5 flex h-6 w-6 shrink-0 cursor-pointer items-center justify-center rounded-struct border-2 border-md-graphite transition-colors duration-md ${
-              selected ? 'bg-md-graphite' : 'bg-md-cloud hover:bg-md-fog'
-            }`}
-          >
-            {selected && (
-              <svg className="h-3.5 w-3.5 text-md-sunbeam" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden>
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-              </svg>
-            )}
-          </div>
-
-          <div
-            role="checkbox"
-            aria-checked={ticket.is_completed}
-            tabIndex={0}
-            onClick={handleToggle}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                onToggleComplete(ticket.id, !ticket.is_completed);
-              }
-            }}
-            className={`mt-0.5 flex h-6 w-6 shrink-0 cursor-pointer items-center justify-center rounded-struct border-2 border-md-graphite transition-colors duration-md ${
-              ticket.is_completed ? 'bg-md-sky border-md-graphite' : 'bg-md-cloud hover:bg-md-fog'
-            }`}
-          >
-            {ticket.is_completed && (
-              <svg className="h-3.5 w-3.5 text-md-ink" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden>
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-              </svg>
-            )}
-          </div>
+          {batchMode ? (
+            <div
+              role="checkbox"
+              aria-checked={selected}
+              tabIndex={0}
+              onClick={handleSelect}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onSelect?.(ticket.id);
+                }
+              }}
+              className={`mt-0.5 flex h-6 w-6 shrink-0 cursor-pointer items-center justify-center rounded-struct border-2 border-md-graphite transition-colors duration-md ${
+                selected ? 'bg-md-graphite' : 'bg-md-cloud hover:bg-md-fog'
+              }`}
+            >
+              {selected && (
+                <svg className="h-3.5 w-3.5 text-md-sunbeam" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden>
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                </svg>
+              )}
+            </div>
+          ) : (
+            <div
+              role="checkbox"
+              aria-checked={ticket.is_completed}
+              tabIndex={0}
+              onClick={handleToggle}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onToggleComplete(ticket.id, !ticket.is_completed);
+                }
+              }}
+              className={`mt-0.5 flex h-6 w-6 shrink-0 cursor-pointer items-center justify-center rounded-struct border-2 border-md-graphite transition-colors duration-md ${
+                ticket.is_completed ? 'bg-md-sky border-md-graphite' : 'bg-md-cloud hover:bg-md-fog'
+              }`}
+            >
+              {ticket.is_completed && (
+                <svg className="h-3.5 w-3.5 text-md-ink" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden>
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                </svg>
+              )}
+            </div>
+          )}
 
           <CardTitle
             className={`flex-1 text-[15px] leading-snug ${
