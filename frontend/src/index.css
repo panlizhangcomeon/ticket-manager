@@ -1,0 +1,73 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* MotherDuck-style design tokens — aligned with .cursor/rules/style.mdc */
+:root {
+  --md-cream: #f4efea;
+  --md-sunbeam: #ffde00;
+  --md-sunbeam-dark: #e3c300;
+  --md-sky: #6fc2ff;
+  --md-sky-strong: #2ba5ff;
+  --md-soft-blue: #ebf9ff;
+  --md-cloud: #ffffff;
+  --md-fog: #f8f8f7;
+  --md-ink: #383838;
+  --md-slate: #a1a1a1;
+  --md-graphite: #000000;
+  --md-shadow: rgba(0, 0, 0, 0.08);
+  --md-grid-line: #e4d6c3;
+  --header-mobile: 70px;
+  --header-desktop: 90px;
+  --eyebrow-mobile: 36px;
+  --eyebrow-desktop: 40px;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply min-h-screen bg-md-cream font-sans text-md-ink antialiased;
+    font-size: 15px;
+    line-height: 1.5;
+  }
+
+  ::selection {
+    background: rgba(111, 194, 255, 0.4);
+    color: var(--md-graphite);
+  }
+}
+
+/* Graph-paper section accent */
+.md-graph-paper {
+  background-color: var(--md-cream);
+  background-image: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 39px,
+      var(--md-grid-line) 39px,
+      var(--md-grid-line) 40px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 39px,
+      var(--md-grid-line) 39px,
+      var(--md-grid-line) 40px
+    );
+}
+
+/* Markdown in detail / preview */
+.prose-md-ticket {
+  @apply text-md-ink;
+}
+
+.prose-md-ticket a {
+  @apply text-md-sky-strong underline decoration-2 underline-offset-2;
+}
+
+.prose-md-ticket code {
+  @apply rounded-struct border-2 border-md-graphite bg-md-fog px-1 py-0.5 text-[13px] font-mono;
+}
