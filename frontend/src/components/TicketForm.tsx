@@ -72,7 +72,7 @@ export function TicketForm({ ticket, tags, defaultSelectedTagIds, onSubmit, onCa
   const mdTable = () =>
     applyInsert((v, s, e) => insertSnippet(v, s, e, '| 列1 | 列2 |\n| --- | --- |\n|  |  |\n', 2, 4));
   const mdNewline = () => applyInsert((v, s, e) => insertRaw(v, s, e, '\n'));
-  const mdHorizontalRule = () => applyInsert((v, s, e) => insertLinePrefix(v, s, e, '---\n'));
+  const mdHorizontalRule = () => applyInsert((v, s, e) => insertLinePrefix(v, s, e, '***\n'));
 
   useEffect(() => {
     if (ticket) {

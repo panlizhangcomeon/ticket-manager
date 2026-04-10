@@ -40,19 +40,34 @@ export function Sidebar({
           </h3>
           <div className="space-y-1">
             {statusItems.map((item) => {
-              const active = selectedStatus === item.key && selectedTagId === null;
+              const active = selectedStatus === item.key;
               return (
                 <button
                   key={item.key}
                   type="button"
                   onClick={() => onStatusChange(item.key)}
+                  aria-pressed={active}
                   className={`flex w-full items-center justify-between rounded-struct border-2 px-3 py-2.5 text-left text-sm font-semibold transition-[transform,box-shadow] duration-md ease-in-out ${
                     active
-                      ? 'border-md-graphite bg-md-sunbeam text-md-ink shadow-md-lift -translate-x-1 -translate-y-1'
+                      ? 'border-md-graphite bg-md-sunbeam text-md-ink shadow-md-lift -translate-x-1 -translate-y-1 ring-2 ring-md-graphite ring-offset-2 ring-offset-md-soft-blue'
                       : 'border-md-graphite bg-md-cloud text-md-ink hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-md-lift'
                   }`}
                 >
-                  <span>{item.label}</span>
+                  <span className="flex min-w-0 items-center gap-2">
+                    <span
+                      className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-struct border-2 ${
+                        active ? 'border-md-graphite bg-md-graphite' : 'border-transparent bg-transparent'
+                      }`}
+                      aria-hidden
+                    >
+                      {active && (
+                        <svg className="h-3 w-3 text-md-sunbeam" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                      )}
+                    </span>
+                    {item.label}
+                  </span>
                   <span
                     className={`rounded-struct border-2 px-2 py-0.5 font-mono text-xs ${
                       active

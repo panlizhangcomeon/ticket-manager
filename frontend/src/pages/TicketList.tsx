@@ -55,23 +55,29 @@ export function TicketList({ globalSearch = '' }: TicketListProps) {
   const stats = useMemo(() => {
     const pending = allTickets.filter(t => !t.is_completed).length;
     const completed = allTickets.filter(t => t.is_completed).length;
-
-    const tagCounts: Record<number, number> = {};
-    allTickets.forEach(ticket => {
-      if (ticket.tags) {
-        ticket.tags.forEach(tag => {
-          tagCounts[tag.id] = (tagCounts[tag.id] || 0) + 1;
-        });
-      }
-    });
-
     return {
       all: allTickets.length,
       pending,
       completed,
-      tagCounts,
     };
   }, [allTickets]);
+
+  /** 标签旁数字：随上方「状态」筛选变化（全部 / 待完成 / 已完成各自计数） */
+  const tagCountsForSidebar = useMemo(() => {
+    const pool =
+      selectedStatus === 'pending'
+        ? allTickets.filter(t => !t.is_completed)
+        : selectedStatus === 'completed'
+          ? allTickets.filter(t => t.is_completed)
+          : allTickets;
+    const tagCounts: Record<number, number> = {};
+    pool.forEach(ticket => {
+      ticket.tags?.forEach(tag => {
+        tagCounts[tag.id] = (tagCounts[tag.id] || 0) + 1;
+      });
+    });
+    return tagCounts;
+  }, [allTickets, selectedStatus]);
 
   const defaultSelectedTagIdsForCreate = useMemo(
     () => (selectedTagId !== null ? [selectedTagId] : []),
@@ -234,7 +240,7 @@ export function TicketList({ globalSearch = '' }: TicketListProps) {
     <div className="flex min-h-full w-full flex-col md:flex-row">
       <Sidebar
         tags={tags}
-        tagCounts={stats.tagCounts}
+        tagCounts={tagCountsForSidebar}
         selectedStatus={selectedStatus}
         selectedTagId={selectedTagId}
         allCount={stats.all}
