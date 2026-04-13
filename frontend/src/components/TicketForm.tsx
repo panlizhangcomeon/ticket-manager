@@ -110,7 +110,7 @@ export function TicketForm({ ticket, tags, defaultSelectedTagIds, onSubmit, onCa
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onCancel()}>
-      <DialogContent className="flex max-h-[90vh] max-w-2xl flex-col overflow-hidden p-0">
+      <DialogContent className="flex max-h-[90vh] max-w-4xl flex-col overflow-hidden p-0">
         <DialogHeader className="border-b-2 border-md-graphite bg-md-soft-blue px-6 py-5">
           <DialogTitle>
             {ticket ? '编辑 Ticket' : '创建 Ticket'}
@@ -194,7 +194,7 @@ export function TicketForm({ ticket, tags, defaultSelectedTagIds, onSubmit, onCa
                 </div>
               )}
               {showPreview ? (
-                <div className="min-h-[280px] rounded-struct border-2 border-md-graphite bg-md-fog p-4">
+                <div className="min-h-[420px] rounded-struct border-2 border-md-graphite bg-md-fog p-4">
                   {description ? (
                     <div className="prose-md-ticket prose-sm max-w-none text-[15px]">
                       <MarkdownContent>{description}</MarkdownContent>
@@ -210,8 +210,8 @@ export function TicketForm({ ticket, tags, defaultSelectedTagIds, onSubmit, onCa
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="在此编写描述；可用上方工具栏插入常用 Markdown 格式。"
-                  rows={14}
-                  className="min-h-[280px] resize-none font-mono text-sm"
+                  rows={22}
+                  className="min-h-[420px] resize-none font-mono text-sm"
                 />
               )}
               <p className="mt-1.5 text-xs font-medium text-md-slate">支持 Markdown 语法</p>
