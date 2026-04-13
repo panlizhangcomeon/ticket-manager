@@ -36,7 +36,7 @@ function AppContent() {
             to="/"
             className="shrink-0 text-ui font-bold uppercase tracking-wide text-md-ink transition-colors hover:text-md-sky-strong"
           >
-            Ticket 台
+            Ticket 管理
           </Link>
 
           <div className="min-w-0 flex-1 max-w-xl">
