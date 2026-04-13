@@ -11,6 +11,11 @@ async function loadMermaid() {
       theme: 'neutral',
       suppressErrorRendering: true,
       fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+      class: {
+        padding: 20,
+        nodeSpacing: 55,
+        rankSpacing: 55,
+      },
     });
     mermaidInitialized = true;
   }
@@ -19,6 +24,23 @@ async function loadMermaid() {
 
 interface MermaidBlockProps {
   chart: string;
+}
+
+/** 渲染阶段在临时 DOM 里量的 foreignObject 常偏小，插入页面后按内容重算宽高，避免边标签被裁切。 */
+function fixForeignObjectSizes(container: HTMLElement) {
+  for (const fo of container.querySelectorAll<SVGForeignObjectElement>('foreignObject')) {
+    const inner = fo.querySelector<HTMLElement>(':scope > div');
+    if (!inner) continue;
+    inner.style.overflow = 'visible';
+    const rect = inner.getBoundingClientRect();
+    let w = Math.max(inner.scrollWidth, inner.offsetWidth, rect.width);
+    let h = Math.max(inner.scrollHeight, inner.offsetHeight, rect.height);
+    w = Math.ceil(Math.max(w, 4));
+    h = Math.ceil(Math.max(h, 18));
+    fo.setAttribute('overflow', 'visible');
+    fo.setAttribute('width', String(w + 8));
+    fo.setAttribute('height', String(h + 8));
+  }
 }
 
 /** Renders a Mermaid diagram from fenced ```mermaid source. */
@@ -52,8 +74,22 @@ export function MermaidBlock({ chart }: MermaidBlockProps) {
         if (cancelled || !mount) return;
         const { svg, bindFunctions } = await mermaid.render(renderId, source, mount);
         if (cancelled || !containerRef.current) return;
-        containerRef.current.innerHTML = svg;
-        bindFunctions?.(containerRef.current);
+        const mountEl = containerRef.current;
+        mountEl.innerHTML = svg;
+        const rootSvg = mountEl.querySelector('svg');
+        if (rootSvg) {
+          rootSvg.setAttribute('overflow', 'visible');
+          rootSvg.style.overflow = 'visible';
+        }
+        requestAnimationFrame(() => {
+          if (cancelled || !containerRef.current) return;
+          fixForeignObjectSizes(containerRef.current);
+          requestAnimationFrame(() => {
+            if (cancelled || !containerRef.current) return;
+            fixForeignObjectSizes(containerRef.current);
+            bindFunctions?.(containerRef.current);
+          });
+        });
         setError(null);
       } catch (e) {
         if (containerRef.current) containerRef.current.innerHTML = '';
@@ -84,7 +120,7 @@ export function MermaidBlock({ chart }: MermaidBlockProps) {
 
   return (
     <div
-      className="relative my-4 overflow-x-auto rounded-struct border-2 border-md-graphite bg-md-cloud p-4 [&_svg]:h-auto [&_svg]:max-w-full"
+      className="relative my-4 w-full max-w-full overflow-visible rounded-struct border-2 border-md-graphite bg-md-cloud px-4 py-6 [&_svg]:h-auto [&_svg]:max-w-full [&_svg]:overflow-visible"
       aria-busy={pending}
     >
       {pending && (

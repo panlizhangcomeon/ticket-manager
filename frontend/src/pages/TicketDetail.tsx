@@ -81,7 +81,7 @@ export function TicketDetail() {
         返回
       </button>
 
-      <article className="overflow-hidden rounded-struct border-2 border-md-graphite bg-md-cloud shadow-md-lift">
+      <article className="overflow-visible rounded-struct border-2 border-md-graphite bg-md-cloud shadow-md-lift">
         <div className="border-b-2 border-md-graphite bg-md-soft-blue px-6 py-8 sm:px-8">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <h1
